@@ -21,3 +21,5 @@ array_pop($content);
 $content = implode(" ",$content)."...";
 echo $content;
 }
+
+?>

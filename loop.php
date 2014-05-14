@@ -27,8 +27,10 @@ border-radius: 5px;
 margin-top: -25px;
 }
 </style>
-<article id="post-<?php the_ID(); ?>" class="post columns four <?php echo sampression_cat_slug(); ?> <?php if ( is_sticky() && is_home() ) { echo 'corner-stamp'; } else { echo 'item'; } ?> ">
-      <?php if(function_exists('the_ratings')) { the_ratings(); } ?><h3 class="post-title"><a href="<?php the_permalink() ?>" title="<?php echo esc_attr( get_the_title() ); ?>" rel="bookmark" ><?php the_title(); ?></a></h3>
+
+<article id="post-<?php the_ID(); ?>" class="post columns four item <?php echo sampression_cat_slug(); ?> <?php if ( is_sticky() && is_home() ) { echo 'sticky corner-stamp'; } else { echo 'item'; } ?>" data-groups='["all", <?php $count = sampression_cat_count(); $i=1; foreach((get_the_category()) as $category) { if($i< $count) { $item = ', '; } else{ $item =''; } echo "\"".$category->slug."\"".$item; $i++; } ?>]'>
+      <?php if(function_exists('the_ratings')) { the_ratings(); } ?>
+      <h3 class="post-title"><a href="<?php the_permalink() ?>" title="<?php echo esc_attr( get_the_title() ); ?>" rel="bookmark" ><?php the_title(); ?></a></h3>
       
       <?php if ( comments_open() ) : ?>
             <span class="col count-comment">
@@ -39,7 +41,8 @@ margin-top: -25px;
       
       <?php if ( has_post_thumbnail() ) { ?>
         <div class="featured-img">
-        <a href="<?php the_permalink(); ?>" title="<?php echo esc_attr( the_title_attribute( 'echo=0' ) ); ?>" ><?php the_post_thumbnail( 'large' ); ?></a>
+        <a href="<?php the_permalink(); ?>" title="<?php echo esc_attr( the_title_attribute( 'echo=0' ) ); ?>" >
+			<?php the_post_thumbnail( 'featured-thumbnail','',true ); ?></a>
         </div>
 		<!-- .featured-img -->
       <?php } ?>
@@ -56,7 +59,8 @@ margin-top: -25px;
 					sprintf( '<a href="%1$s" title="%2$s" rel="bookmark">%3$s</a>',
 						get_permalink(),
 						esc_attr( get_the_time() ),
-						get_the_date('d M Y')
+						get_the_date('d M Y'),
+						get_month_link( get_the_time('Y'), get_the_time('m'))
 					),
 					sprintf( '<div class="post-author col"><span class="ico hello">Autor</span><a class="url fn n" href="%1$s" title="%2$s">%3$s</a></div>',
 						get_author_posts_url( get_the_author_meta( 'ID' ) ),
@@ -81,4 +85,4 @@ margin-top: -25px;
       </div>
 	  <?php } ?>
          
-    </article>
+</article> <!--.post-->

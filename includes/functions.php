@@ -34,11 +34,10 @@ if (!function_exists('sampression_setup')):
          */
         if (!isset($content_width))
             $content_width = 650;
-
         /**
          * Sampression is now available for translations.
          */
-	    load_theme_textdomain('sampression');
+		load_theme_textdomain('sampression', get_template_directory() . '/languages');
 				
         /**
          * Add callback for custom TinyMCE editor stylesheets. (editor-style.css)
@@ -59,7 +58,38 @@ if (!function_exists('sampression_setup')):
         add_theme_support('post-thumbnails');
 		// Custom image sizes
 		add_image_size( 'featured', 700, 400, true); // Set the size of Featured Image
-	
+		add_image_size( 'featured-thumbnail', 220); // Set the size of Featured Image Thumbnail
+		
+		/**
+		 * This feature enables custom background color and image support for a theme
+		 */
+		add_theme_support( 'custom-background', array(
+			'default-color' => '',
+		) );
+		
+		/**
+		 * This feature enables custom header color and image support for a theme
+		 */
+		add_theme_support( 'custom-header', array(
+			// Text color and image (empty to use none).
+			'default-text-color'     => 'FE6E41',
+			'default-image'          => '',
+
+			// Set height and width, with a maximum value for the width.
+			'height'                 => 152,
+			'width'                  => 960,
+			'max-width'              => 2000,
+
+			// Support flexible height and width.
+			'flex-height'            => true,
+			'flex-width'             => true
+		) ); 
+		
+		/**
+		 * remove wordpress version from header 
+		 */
+		remove_action( 'wp_head', 'wp_generator' );
+		
         /**
          * This feature enables custom-menus support for a theme.
          * @see http://codex.wordpress.org/Function_Reference/register_nav_menus
@@ -100,11 +130,11 @@ if (!is_admin())
 if (!function_exists('sampression_js')) {
 
 	function sampression_js() {
-		wp_enqueue_script("jquery");
 		// JS at the bottom for fast page loading. 
 		wp_enqueue_script('sampression-modernizer', get_template_directory_uri() . '/lib/js/modernizr.js', array('jquery'), '2.6.1', false);
-		wp_enqueue_script('sampression-jquery-isotope', get_template_directory_uri() . '/lib/js/jquery.isotope.min.js', array('jquery'), '1.5.19', true);
+		wp_enqueue_script('sampression-shuffle', get_template_directory_uri() . '/lib/js/jquery.shuffle.min.js', array('jquery'), '', false);                
 		wp_enqueue_script('sampression-custom-script', get_template_directory_uri() . '/lib/js/scripts.js', array('jquery'), '1.1', true);
+        wp_enqueue_script('shuffle', get_template_directory_uri() . '/lib/js/shuffle.js', array('jquery'), '', false);
 	}
 
 }
@@ -122,13 +152,13 @@ add_action( 'wp_enqueue_scripts', 'sampression_enqueue_comment_reply' );
 /*=======================================================================
  * Remove rel attribute from the category list
  *=======================================================================*/
-function remove_category_list_rel($output)
+function sampression_remove_category_list_rel($output)
 {
   $output = str_replace(' rel="category"', '', $output);
   return $output;
 }
-add_filter('wp_list_categories', 'remove_category_list_rel');
-add_filter('the_category', 'remove_category_list_rel');
+add_filter('wp_list_categories', 'sampression_remove_category_list_rel');
+add_filter('the_category', 'sampression_remove_category_list_rel');
 
 
 /*=======================================================================
@@ -147,8 +177,8 @@ function sampression_content_nav( $nav_id ) {
 				wp_pagenavi();
 			} else {
 			?>
-                <div class="nav-previous alignleft"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Posts antigos', 'sampression' ) ); ?></div>
-                <div class="nav-next alignright"><?php previous_posts_link( __( 'Novos posts <span class="meta-nav">&rarr;</span>', 'sampression' ) ); ?></div>
+                <div class="nav-previous alignleft"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older posts', 'sampression' ) ); ?></div>
+                <div class="nav-next alignright"><?php previous_posts_link( __( 'Newer posts <span class="meta-nav">&rarr;</span>', 'sampression' ) ); ?></div>
             <?php
 			}
 			?>
@@ -230,14 +260,41 @@ add_filter('get_the_excerpt', 'sampression_custom_excerpt_more');
 /*=======================================================================
  * Get Category Slugs
  *=======================================================================*/
-function sampression_cat_slug() {
-    $cats = array();
-	foreach((get_the_category()) as $category) { 
-		$cats[] = $category->slug;
-	} 
-	$slug = implode(' ', $cats);
-	return $slug;
+if(!function_exists('sampression_cat_slug')){
+    function sampression_cat_slug() {
+        $cats = array();
+        foreach ((get_the_category()) as $category) {
+            $cats[] = $category->slug;
+        }
+        $slug = implode(' ', $cats);
+        return $slug;
+    }
 }
+
+if(!function_exists('sampression_cat_slugs')){
+    function sampression_cat_slugs() {
+        $cats = array();
+        foreach ((get_the_category()) as $category) {
+            $cats[] = $category->slug;
+        }
+        $slug = implode(', ', $cats);
+        return $slug;
+    }
+
+}
+
+if(!function_exists('sampression_cat_count')){
+    function sampression_cat_count() {
+        $cats = array();
+        $count = 0;
+        foreach ((get_the_category()) as $category) {
+            $count = $count + 1;
+        }
+        return $count;
+    }
+
+}
+
 
 /*=======================================================================
  * Run function during a themes initialization. It clear all widgets
@@ -256,7 +313,8 @@ function sampression_widget_reset() {
 /*=======================================================================
  * WordPress Widgets start right here.
  *=======================================================================*/
-function sampression_widgets_init() {
+ 
+ function sampression_widgets_init() {
 	
 	register_sidebar(array(
 		'name' => __('Bottom Widget 1', 'sampression'),
@@ -293,13 +351,35 @@ function sampression_widgets_init() {
 		'description' => __('Appears on right of the Interior Pages - Can use as much widgets as you wish.', 'sampression'),
 		'id' => 'right-sidebar',
 		'before_title' => '<header class="widget-title">',
-		'after_title' => '</header><div class="widget-entry">',
-		'before_widget' => '<section id="%1$s" class="widget %2$s">',
-		'after_widget' => '</div></section>'
+		'after_title' => '</header>',
+		'before_widget' => '<section id="%1$s" class="widget clearfix %2$s">',
+		'after_widget' => '</section>'
 	));
-		
 }
-add_action('widgets_init', 'sampression_widgets_init');
+add_action('widgets_init', 'sampression_widgets_init'); 
+
+function sampression_default_widgets() {
+	 $sidebars_widgets = get_option( 'sidebars_widgets' );
+	 if(!get_option('samp_auto_widget_installed',false)){
+		 
+		if( empty($sidebars_widgets['bottom-widget-3']) ){	//if there are no widgets on the 'bottom-widget-3'
+		 
+				$id = count( $sidebars_widgets ) + 1;
+				$sidebars_widgets['bottom-widget-3'] = array( "text-" . $id );
+
+				$ops = get_option( 'widget_text' );
+				$ops[$id] = array(
+					'title' => 'About me automatic widget',
+					'text' => 'This is an automatic widget added on Third Bottom Widget box (Bottom Widget 3). To edit please go to Appearance > Widgets and choose 3rd widget from the top in area second called Bottom Widget 3. Title is also manageable from widgets as well.', 
+				);
+				update_option( 'widget_text', $ops ); 
+				update_option( 'sidebars_widgets', $sidebars_widgets );	
+		}
+		update_option('samp_auto_widget_installed', true);
+		
+	 } 
+}
+add_action('widgets_init', 'sampression_default_widgets', 11);
 
 /*=======================================================================
  * Template for comments and pingbacks.
@@ -308,8 +388,6 @@ add_action('widgets_init', 'sampression_widgets_init');
  * simply create your own sampression_comment(), and that function will be used instead.
  *
  * Used as a callback by wp_list_comments() for displaying the comments.
- *
- * @since Twenty Eleven 1.0
  *=======================================================================*/
 
 if ( ! function_exists( 'sampression_comment' ) ) :
@@ -396,88 +474,77 @@ endif; // ends check for sampression_comment()
  *=======================================================================*/
  
 function sampression_favicon() {
-	if(get_option('opt_sam_favicons')) {
-	?>
-    	<link rel="shortcut icon" href="<?php echo get_option('opt_sam_favicons'); ?>">
-    <?php
-	} else {
-	?>
-    	<link rel="shortcut icon" href="<?php echo get_template_directory_uri(); ?>/images/favicon.ico">
-    <?php
+
+	//apple touch icon 16x16
+	if(!get_option('opt_sam_use_favicon16x16') || trim(get_option('opt_sam_use_favicon16x16')) == 'no') {
+		if(get_option('opt_sam_favicons')) { 
+		?>
+			<link rel="shortcut icon" href="<?php echo get_option('opt_sam_favicons'); ?>">
+		<?php
+		}
 	}
-	if(get_option('opt_sam_apple_icons_57')) {
-	?>
-    	<link rel="shortcut icon" href="<?php echo get_option('opt_sam_apple_icons_57'); ?>">
-    <?php
-	} else {
-	?>
-    	<link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/images/apple-touch-icon.png">
-    <?php
+	
+	//apple touch icon 57x57
+	if(!get_option('opt_sam_use_appletouch57x57') || trim(get_option('opt_sam_use_appletouch57x57')) == 'no') {
+		if(get_option('opt_sam_apple_icons_57')) {
+		?>
+			<link rel="apple-touch-icon" sizes="57x57" href="<?php echo get_option('opt_sam_apple_icons_57'); ?>">
+		<?php
+		} 
 	}
-	if(get_option('opt_sam_apple_icons_72')) {
-	?>
-    	<link rel="shortcut icon" href="<?php echo get_option('opt_sam_apple_icons_72'); ?>">
-    <?php
-	} else {
-	?>
-    	<link rel="apple-touch-icon" sizes="72x72" href="<?php echo get_template_directory_uri(); ?>/images/apple-touch-icon-72x72.png">
-    <?php
+	
+	//apple touch icon 72x72
+	if(!get_option('opt_sam_use_appletouch72x72') || trim(get_option('opt_sam_use_appletouch72x72')) == 'no') {
+		if(get_option('opt_sam_apple_icons_72')) {
+		?>
+			<link rel="apple-touch-icon" sizes="72x72" href="<?php echo get_option('opt_sam_apple_icons_72'); ?>">
+		<?php
+		} 
 	}
-	if(get_option('opt_sam_apple_icons_114')) {
-	?>
-    	<link rel="shortcut icon" href="<?php echo get_option('opt_sam_apple_icons_114'); ?>">
-    <?php
-	} else {
-	?>
-    	<link rel="apple-touch-icon" sizes="114x114" href="<?php echo get_template_directory_uri(); ?>/images/apple-touch-icon-114x114.png">
-    <?php
+	
+	//apple touch icon 114x114
+	if(!get_option('opt_sam_use_appletouch114x114') || trim(get_option('opt_sam_use_appletouch114x114')) == 'no') {	
+		if(get_option('opt_sam_apple_icons_114')) {
+		?>
+			
+			<link rel="apple-touch-icon" sizes="114x114" href="<?php echo get_option('opt_sam_apple_icons_114'); ?>">
+		<?php
+		}
+	}
+	
+	// apple touch icon 144x144
+	if(!get_option('opt_sam_use_appletouch144x144') || trim(get_option('opt_sam_use_appletouch144x144')) == 'no') {	
+		if(get_option('opt_sam_apple_icons_144')) {
+		?>
+			
+			<link rel="apple-touch-icon" sizes="144x144" href="<?php echo get_option('opt_sam_apple_icons_144'); ?>">
+		<?php
+		}
 	}
 }
-
 /*=======================================================================
  * Function to get default logo by Sampression theme
  *=======================================================================*/
- 
-function sampression_logo() {
+add_action('sampression_logo', 'sampression_show_logo');
+function sampression_show_logo() {
 	if(get_option('opt_sam_logo')) {
 	?>
-    	<img src="<?php echo get_option('opt_sam_logo'); ?>" alt="<?php bloginfo('name'); ?>">
-    <?php
-	} else {
-	?>
-    	<img src="<?php echo get_template_directory_uri(); ?>/images/sampression-logo.png" width="46" height="56" alt="Sampression">
+		<a href="<?php echo home_url( '/' ); ?>" title="<?php echo esc_attr( ucwords(get_bloginfo( 'name', 'display' )) ); ?>" rel="home" id="logo-area">
+			<img class="logo-img" src="<?php echo get_option('opt_sam_logo'); ?>" alt="<?php bloginfo('name'); ?>">
+		</a>
     <?php
 	}
 }
 
-
-/*=======================================================================
-* embed the javascript file that makes the AJAX request to filter category in Primary Navigation
-*=======================================================================*/
-
-if (!is_admin())
-	add_action('wp_enqueue_scripts', 'sampression_ajax');
-	
-
-if (!function_exists('sampression_ajax')) {
-
-	function sampression_ajax() {
-		wp_enqueue_script("jquery");
-		
-		 wp_enqueue_script( 'my-ajax-request', get_template_directory_uri() . '/lib/js/load_content.js', '' , '1.1', true );
-		 wp_localize_script( 'my-ajax-request', 'MyAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
-	}
-
-}
 
 /*=======================================================================
 * declare the URL to the file that handles the AJAX request (wp-admin/admin-ajax.php)
 *=======================================================================*/
 
-add_action( 'wp_ajax_nopriv_filter-cat-data', 'filter_cat_callback' );
-add_action( 'wp_ajax_filter-cat-data', 'filter_cat_callback' );
+add_action( 'wp_ajax_nopriv_filter-cat-data', 'sampression_filter_cat_callback' );
+add_action( 'wp_ajax_filter-cat-data', 'sampression_filter_cat_callback' );
  
-function filter_cat_callback() {
+function sampression_filter_cat_callback() {
    $slug = $_POST['category'];
    $exc = $_POST['exclude'];
    $exclude = explode('~', $exc);
@@ -538,7 +605,7 @@ function filter_cat_callback() {
 * Get an IP of USER
 *=======================================================================*/
 
-function get_ip() {
+function sampression_get_ip() {
 	if (getenv('HTTP_CLIENT_IP')) {
 		$ip = getenv('HTTP_CLIENT_IP');
 	}
@@ -563,7 +630,7 @@ function get_ip() {
 /*=======================================================================
 * Display notification/message in admin.
 *=======================================================================*/
-function showMessage($message='', $errormsg = false) {
+function sampression_showMessage($message='', $errormsg = false) {
 	if($message!='') {
 		if ($errormsg) {
 			echo '<div id="message" class="error">';
@@ -573,10 +640,150 @@ function showMessage($message='', $errormsg = false) {
 		echo "<p><strong>$message</strong></p></div>";
 	}
 }
-function showNotices() {
+function sampression_showNotices() {
     if(function_exists('showMessage')) {
 		showMessage();
 	}
 }
-add_action('admin_notices', 'showNotices');
+add_action('admin_notices', 'sampression_showNotices');
+
+function sampression_check($opt_field){
+	$use_logo = get_option($opt_field);
+		if($use_logo == 'yes') 
+			return ' checked="checked" ';
+}
+
+/* function to echo number of class  depending on number of social media link set */
+function getnoofclass(){
+		$noofclass=0;
+		$class = 'socialzero';
+		 if( get_option( 'opt_get_facebook' ) !=''){ $noofclass++; }
+		 if( get_option( 'opt_get_twitter' ) !=''){ $noofclass++; }
+		 if( get_option( 'opt_get_gplus' ) !=''){ $noofclass++; }
+		 if( get_option( 'opt_get_youtube' ) !=''){ $noofclass++; }
+		 switch($noofclass){
+			case 1: $class='socialone'; break;
+			case 2: $class='socialtwo'; break;
+			case 3: $class='socialthree'; break;
+			case 4: $class='socialfour'; break;
+		 }
+		return $class;
+	  }
+/**
+ * Add meta tags.
+ */ 
+add_action( 'sampression_meta', 'sampression_add_meta' );
+
+function sampression_add_meta() {
+	?>
+	<!-- Charset -->
+	<meta charset="<?php bloginfo('charset'); ?>">
+	<!-- Mobile Specific Metas  -->
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<!-- <meta name="viewport" content="width=1024" />-->
+	<?php
+}
+
+/**
+ * Add google fonts, pingback url, etc.
+ */ 
+add_action( 'sampression_links', 'sampression_add_links' );
+
+function sampression_add_links() {
+	?>
+	<!-- Google Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Droid+Serif:700,400,400italic,700italic' rel='stylesheet' type='text/css'>
+	<!-- Pingback Url -->
+	<link rel="pingback" href="<?php bloginfo('pingback_url'); ?>">
+	<?php
+}
+/**
+ * Displays title. @uses wp_title() 
+ */
+add_action( 'sampression_title', 'sampression_title' );
+
+function sampression_title() {
+	?>
+	<title>
+		<?php wp_title( '|', true, 'right' ); ?>
+	</title>
+	<?php
+}
+
+add_filter( 'wp_title', 'sampression_filter_wp_title' );
+
+function sampression_filter_wp_title() {
+	
+	// Print the <title> tag based on what is being viewed.
+	global $page, $paged;
+	
+	// Add the blog name.
+	 bloginfo( 'name' ); 
+
+	// Add the blog description for the home/front page.
+	$site_description = get_bloginfo( 'description', 'display' );
+	if ( $site_description && ( is_home() || is_front_page() ) ){
+		echo " | $site_description"; 
+	}
+}
+add_action('sampression_favicon','sampression_favicon');
+
+add_action( 'wp_enqueue_scripts', 'sampression_enqueue_styles' );
+
+function sampression_enqueue_styles(){
+	global $wp_styles;
+    // other style sheets...
+	wp_enqueue_style('sampression-style', get_stylesheet_uri(), false, '1.4');
+	wp_enqueue_style('fontello', get_template_directory_uri() . '/lib/css/fontello.css', false, false, 'screen');
+    // ie-specific style sheets
+    wp_register_style('ie7-only', get_template_directory_uri() . '/lib/css/fontello-ie7.css');
+    $wp_styles->add_data('ie7-only', 'conditional', 'IE 7');
+    wp_enqueue_style('ie7-only');
+}
+
+add_action('sampression_custom_header_style','sampression_custom_header_style');
+
+function sampression_custom_header_style() {
+	$text_color = get_header_textcolor();
+	// If no custom options for text are set, do nothing
+	if ( $text_color == get_theme_support( 'custom-header', 'default-text-color' ) )
+		return;
+	// Else, we have custom styles.
+	?>
+	<style type="text/css">
+		<?php	// Is the text hidden?
+			if ( ! display_header_text() ) :
+		?>
+			.site-title,
+			.site-description {
+				position: absolute !important;
+				clip: rect(1px 1px 1px 1px); /* IE7 */
+				clip: rect(1px, 1px, 1px, 1px);
+			}
+		<?php	// If the user has set a custom color for the text, lets use that.
+			else : 
+		?>
+			.site-title a,
+			.site-description {
+				color: #<?php echo $text_color; ?> !important;
+			}
+		<?php endif; ?>
+	</style>
+	<?php
+}
+
+add_action('sampression_footer', 'sampression_enqueue_conditional_scripts');
+
+function sampression_enqueue_conditional_scripts(){
+	?>
+	<!-- Enables advanced css selectors in IE, must be used with a JavaScript library (jQuery Enabled in functions.php) -->
+	<!--[if lt IE 9]>
+		<script src="<?php echo get_template_directory_uri(); ?>/lib/js/selectivizr.js"></script>
+	<![endif]-->
+	<!--[if lt IE 7 ]>
+		<script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+		<script>window.attachEvent("onload",function(){CFInstall.check({mode:"overlay"})})</script>
+	<![endif]-->
+	<?php
+}
 ?>

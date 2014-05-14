@@ -13,48 +13,25 @@
 <!--[if IE 7 ]> <html <?php language_attributes(); ?> class="no-js ie7"> <![endif]-->
 <!--[if IE 8 ]> <html <?php language_attributes(); ?> class="no-js ie8"> <![endif]-->
 <!--[if IE 9 ]> <html <?php language_attributes(); ?> class="no-js ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!-->
-<html <?php language_attributes(); ?> class="no-js"> <!--<![endif]--><head>
-
-	<meta charset="<?php bloginfo('charset'); ?>">
-	<!-- Mobile Specific Metas
-  	================================================== -->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2">
-
-	<title>
-	<?php
-	/*
-	 * Print the <title> tag based on what is being viewed.
-	 */
-	global $page, $paged;
-
-	wp_title( '|', true, 'right' );
-
-	// Add the blog name.
-	bloginfo( 'name' );
-
-	// Add the blog description for the home/front page.
-	$site_description = get_bloginfo( 'description', 'display' );
-	if ( $site_description && ( is_home() || is_front_page() ) )
-		echo " | $site_description";
+<!--[if (gt IE 9)|!(IE)]><!--><html <?php language_attributes(); ?> class="no-js"> <!--<![endif]-->
+<head>
+	<?php		
+		/** sampression hooks **/
+		// Metas
+		do_action( 'sampression_meta' );
+		// Title
+		do_action( 'sampression_title' );
+		// Favicons
+		do_action( 'sampression_favicon' );
+		// CSS
+		do_action( 'sampression_styles' );
+		// Custom header styles
+		do_action('sampression_custom_header_style');
+		// Links
+		do_action( 'sampression_links' );
+		
+		wp_head();
 	?>
-    </title>
-    
-    <!-- Favicons
-    ================================================== -->
-	<?php sampression_favicon(); ?>
-	
-    <!-- CSS
-    ================================================== -->
-    <?php wp_enqueue_style('sampression-style', get_stylesheet_uri(), false, '1.3');?>
-    
-     <!-- Getting Google Fonts
-    ================================================== -->
-    <link href='http://fonts.googleapis.com/css?family=Droid+Serif:700,400,400italic,700italic' rel='stylesheet' type='text/css'>
-	
-	<link rel="pingback" href="<?php bloginfo('pingback_url'); ?>">
-
-<?php wp_head(); ?>
 </head>
 
 <body <?php body_class('top'); ?>>
@@ -78,74 +55,86 @@
 <header id="header">
   <div class="container">
     <div class="columns nine">
-      <div id="logo-wrapper">
-      <a href="<?php echo home_url( '/' ); ?>" title="<?php echo esc_attr( get_bloginfo( 'name', 'display' ) ); ?>" rel="home" id="logo-area">
-      	<?php
-		if(!get_option('opt_sam_use_logo') || get_option('opt_sam_use_logo') == 'no') {
-		?>
-        <div class="logo-img"><?php sampression_logo(); ?></div>
-        <?php
-		}
-		?>
-        <div class="logo-txt">
-          <h1 id="site-title"><?php bloginfo( 'name' ); ?></h1>
-          <h2 id="site-description"><?php bloginfo( 'description' ); ?></h2>
-        </div>
-        </a> 
-        <!-- #logo-area --> 
-        
-      </div>
-      <!-- #logo-wrapper --> 
+	
+			<?php 
+				if(!get_option('opt_sam_use_logo') || get_option('opt_sam_use_logo') == 'no') { 
+						do_action('sampression_logo');
+				} 
+			?>
+			
+			<div class="logo-txt">
+			  <h1 class="site-title" id="site-title">
+			  <a href="<?php echo esc_url( home_url( '/' ) ); ?>" title="<?php echo esc_attr( get_bloginfo( 'name', 'display' ) ); ?>" rel="home">
+			  <?php bloginfo( 'name' ); ?>
+			  </a>
+			  </h1>
+			  <h2 id="site-description" class="site-description"><?php bloginfo( 'description' ); ?></h2>
+			</div>
     </div>
     <div class="columns seven">
       <nav id="top-nav">
         <?php
 		//Check if the Custom Navigation is available
-		 if ( has_nav_menu('top-menu') ) {
+		if ( has_nav_menu('top-menu') ) {
 			wp_nav_menu( array (
 				'theme_location'    => 'top-menu',
 				'container'         => '',
-				'menu_class'           => 'top-menu clearfix',
+				'menu_class'        => 'top-menu clearfix',
 				'depth'             => 0, // set to 1 to disable dropdowns
 				'fallback_cb'       => false
 			));
 		} else {
-			// Otherwise list the Pages
+		// Otherwise list the Pages
 			 ?>
 			<ul class="top-menu clearfix">
 				<?php wp_list_pages('title_li=&depth=0'); ?>
 			</ul>
 			<?php
 		} ?>
-      </nav>
-      <!-- #top-nav -->
-      <div id="interaction-sec">
+      </nav><!-- #top-nav-->
+	  <div id="top-nav-mobile">
+				
+				
+	  </div> 
+      <!-- #top-nav-mobile-->
+      <div id="interaction-sec" class="clearfix <?php echo getnoofclass(); ?>">
         <?php get_search_form(); ?>
      
        <ul class="sm-top">
-       <?php
-	   // Being Social: Check Facebook and Twitter urls
+       <?php // Being Social 
+	   //Facebook
 	    if( get_option( 'opt_get_facebook' ) !=''){ ?>
-          <li class="sm-top-fb"><a href="http://www.facebook.com/<?php echo get_option( 'opt_get_facebook' ); ?>" target="_blank">Facebook</a></li>
+          <li class="sm-top-fb"><a href="<?php echo stripslashes(get_option( 'opt_get_facebook' )); ?>" target="_blank">Facebook</a></li>
        <?php }
-	   if( get_option( 'opt_get_twitter' ) ) {
+		// Twitter
+	   if( get_option( 'opt_get_twitter' ) !='') {
 	    ?>
-          <li class="sm-top-tw"><a href="http://www.twitter.com/<?php echo get_option( 'opt_get_twitter' ); ?>" target="_blank">Twitter</a></li>
+          <li class="sm-top-tw"><a href="<?php echo stripslashes(get_option( 'opt_get_twitter') ); ?>" target="_blank">Twitter</a></li>
          <?php }
-	   if( get_option( 'opt_get_gplus' ) ) {
+		// Google plus 
+	   if( get_option( 'opt_get_gplus' ) !='') {
 	    ?>
-          <li class="sm-top-gplus"><a href="<?php echo get_option( 'opt_get_gplus' ); ?>" target="_blank">Google Plus</a></li>
-          <?php } ?>
+          <li class="sm-top-gplus"><a href="<?php echo stripslashes(get_option( 'opt_get_gplus') ); ?>" target="_blank">Google Plus</a></li>
+          <?php } 
+		// Youtube
+		if( get_option( 'opt_get_youtube' ) !='' ) {
+	    ?>
+          <li class="sm-top-youtube"><a href="<?php echo stripslashes(get_option( 'opt_get_youtube') ); ?>" target="_blank">YouTube</a></li>
+          <?php } ?> 
        </ul>
         <!-- .sm-top --> 
       </div>
-      <!-- #interaction-sec --> 
+      <!-- #interaction-sec -->
     </div>
+	<?php $header_image = get_header_image();
+		if ( ! empty( $header_image ) ) : ?>
+			<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><img src="<?php echo esc_url( $header_image ); ?>" class="header-image" width="<?php echo get_custom_header()->width; ?>" height="<?php echo get_custom_header()->height; ?>" alt="" /></a>
+		<?php endif; ?>
   </div>
 </header>
 <!-- #header -->
-<!-- Filter the Post by Category: We are using Isotop (http://isotope.metafizzy.co/) for Filtering: An exquisite jQuery plugin for magical layouts -->
 <?php if(is_home()): ?>
+<span id="primary-nav-scroll"></span>
 <nav id="primary-nav">
   <div class="container">
   <a href="#" id="btn-nav-opt">show/hide</a>
@@ -165,24 +154,42 @@
         $categories = get_categories( $args );
         foreach($categories as $category):
         ?>
-        <li><a href="javascript:void(0);" data-filter=".<?php echo $category->slug; ?>" id="<?php echo $category->slug; ?>" class="filter-data"><span></span><?php echo $category->name; ?></a></li>
+        <li><a href="#" data-filter=".<?php echo $category->slug; ?>" data-group="<?php echo $category->slug; ?>" id="<?php echo $category->slug; ?>"><span></span><?php echo $category->name; ?></a></li>
         <?php
         endforeach;
         ?>
     </ul>
-    
+       
     <!-- Check Viewport: If the normal design couldn't fit with viewport, the Categories will appear via CSS with Select Menu form -->
-    <select name="get-cats" id="get-cats">
-        <option value="*">Mostrar todas</option>
-        <?php
-        foreach($categories as $category):
-        ?>
-        <option value=".<?php echo $category->slug; ?>"><?php echo $category->name; ?></option>
-        <?php
-        endforeach;
-        ?>
-    </select>
-    
+	 
+                <?php
+        $iPod = stripos($_SERVER['HTTP_USER_AGENT'], "iPod");
+        $iPhone = stripos($_SERVER['HTTP_USER_AGENT'], "iPhone");
+        $iPad = stripos($_SERVER['HTTP_USER_AGENT'], "iPad");
+        if ($iPod || $iPhone || $iPad) {
+            ?>
+
+            <select id="get-cat-ios">
+                <option value="<?php echo esc_url(home_url('/')); ?>">Show All</option>
+                <?php
+                foreach ($categories as $category):
+                    ?>
+                    <option value="<?php echo get_term_link($category->slug, 'category'); ?>"><?php echo $category->name; ?></option>
+                    <?php
+                endforeach;
+                ?>
+            </select>
+            <?php
+        } else{
+            
+            ?>
+        <select name="get-cats" id="get-cats" >         
+            <option value="all">Show all</option>
+                    <?php foreach ($categories as $category): ?>
+                <option value="<?php echo $category->slug;
+                        ?>"><?php echo $category->name; ?></option>         <?php endforeach;
+                    ?>     </select> 
+        <?php } ?>
     </div>
   </div>
 </nav>

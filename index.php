@@ -20,7 +20,7 @@ get_header(); ?>
 	
   <?php if (have_posts()) : ?>
   <div id="post-listing" class="clearfix">
-
+  
 	<?php 
 		// Show only one Sticky Post
 	$sticky = get_option( 'sticky_posts' );
@@ -30,7 +30,7 @@ get_header(); ?>
 		'ignore_sticky_posts' => 1
 	);
 	query_posts( $args );
-	if ( $sticky[0] ) {
+	if ( count($sticky)>0 ) {
 	while (have_posts()) : the_post();
 		get_template_part( 'loop', 'index' ); 
 	endwhile;
@@ -43,7 +43,7 @@ get_header(); ?>
 		'post__not_in' => get_option( 'sticky_posts' ),
 		'paged' => $paged
 		) );
-
+		
 		while (have_posts()) : the_post();
 		get_template_part( 'loop', 'index' );
 	

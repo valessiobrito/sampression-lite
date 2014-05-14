@@ -26,7 +26,7 @@ get_header(); ?>
                 
 <header class="page-header columns sixteen">
     <h2 class="quick-note columns sixteen">
-        <?php _e( 'Author Archives: ', 'sampression' ); echo get_the_author(); ?>
+        <?php _e( 'Autores em arquivo: ', 'sampression' ); echo get_the_author(); ?>
     </h2>
 </header>
 <!-- .page-header --> 
@@ -42,8 +42,8 @@ get_header(); ?>
 
   <div id="post-listing" class="clearfix">
   <!-- Corner Stamp: It will always remaing to the right top of the page -->
-  <section class="corner-stamp post columns four">
-  <header><h3><?php _e('Archives', 'sampression'); ?></h3></header>
+  <section class="corner-stamp post columns four item">
+  <header><h3><?php _e('Arquivos', 'sampression'); ?></h3></header>
   <div class="entry">
     <ul class="categories archives">
         <?php
@@ -52,7 +52,7 @@ get_header(); ?>
     </ul>
   </div>
   
-   <header><h3><?php _e('Categories', 'sampression'); ?></h3></header>
+   <header><h3><?php _e('Categorias', 'sampression'); ?></h3></header>
   <div class="entry">
     <ul class="categories">
     	<?php
@@ -75,7 +75,7 @@ get_header(); ?>
     
     <article id="post-0" class="no-results not-found">
 					<header class="entry-header">
-						<h2 class="entry-title"><?php _e( 'Nothing Found', 'sampression' ); ?></h2>
+						<h2 class="entry-title"><?php _e( 'Não existe nada por aqui...', 'sampression' ); ?></h2>
 					</header><!-- .entry-header -->
 
 					<div class="entry-content">
